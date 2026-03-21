@@ -1,0 +1,17 @@
+{
+  "name": "jarvis-live-reviewer",
+  "version": "0.1.0",
+  "description": "Live coding competition scoring bar powered by Gemini vision.",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node test/scoring.test.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "ws": "^8.18.1"
+  }
+}

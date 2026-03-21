@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Live Scoring Overlay</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="overlay-page">
+    <main class="obs-overlay" aria-live="polite">
+      <div id="overlay-title" class="overlay-title-line">
+        Live Coding Scoreboard
+      </div>
+
+      <section class="eval-block">
+        <div class="eval-top">
+          <span id="left-name" class="eval-name">Left</span>
+          <span id="overlay-headline" class="eval-headline"
+            >Scores are even</span
+          >
+          <span id="right-name" class="eval-name eval-name-right">Right</span>
+        </div>
+
+        <div id="eval-bar" class="eval-bar" aria-hidden="true">
+          <div id="eval-left" class="eval-fill eval-fill-left"></div>
+          <div id="eval-right" class="eval-fill eval-fill-right"></div>
+          <div class="eval-neutral-line"></div>
+        </div>
+
+        <div id="eval-details" class="eval-bottom">
+          <span id="left-metric" class="eval-metric">0.0% • 0.0 progress</span>
+          <span id="overlay-rationale" class="eval-rationale"></span>
+          <span id="right-metric" class="eval-metric eval-metric-right"
+            >0.0% • 0.0 progress</span
+          >
+        </div>
+      </section>
+
+      <div id="overlay-footer" class="overlay-footer">
+        <span id="overlay-status" class="overlay-status">
+          <span id="overlay-status-dot" class="status-dot"></span>
+          <span id="overlay-status-text">Waiting</span>
+        </span>
+        <span id="overlay-updated" class="tiny">No updates yet</span>
+      </div>
+    </main>
+
+    <script type="module" src="/overlay.js"></script>
+  </body>
+</html>

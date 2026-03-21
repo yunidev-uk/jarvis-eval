@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Jarvis Live Reviewer</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div class="pill">
+          <span id="status-dot" class="status-dot"></span>
+          <span id="status-text">Scoring disabled</span>
+        </div>
+        <h1>Jarvis Live Reviewer</h1>
+        <p class="subtitle">
+          Capture each Discord stream window, feed periodic screenshots to Gemini, and publish a live websocket scoreboard for an OBS browser source.
+        </p>
+      </section>
+
+      <div class="grid two">
+        <section class="panel">
+          <h2>Round Setup</h2>
+          <div class="field">
+            <label for="session-id">Session ID</label>
+            <input id="session-id" value="default">
+          </div>
+          <div class="field">
+            <label for="model">Gemini model</label>
+            <input id="model" value="gemini-2.0-flash">
+          </div>
+
+          <div class="field">
+            <label for="analysis-interval">Analysis interval (ms)</label>
+            <input id="analysis-interval" type="number" min="3000" step="1000" value="12000">
+          </div>
+          <div class="field">
+            <label for="api-key">Gemini API key override</label>
+            <input id="api-key" type="password" placeholder="Optional if GEMINI_API_KEY is already set">
+          </div>
+          <div class="field">
+            <label for="problem-statement">Problem statement</label>
+            <textarea id="problem-statement" placeholder="Paste the current problem statement here. Gemini will use this plus the screenshots to estimate who is ahead."></textarea>
+          </div>
+          <div class="button-row">
+            <button id="save-settings">Save Settings</button>
+            <button id="toggle-scoring" class="secondary">Enable Scoring</button>
+          </div>
+          <p id="overlay-link" class="tiny"></p>
+          <p class="tiny" id="capture-hints"></p>
+        </section>
+
+        <section class="panel">
+          <h2>Live Output</h2>
+          <div class="callout">
+            <div id="headline">Scores are even</div>
+            <p id="rationale" class="summary">No screenshots yet.</p>
+          </div>
+          <div class="grid" style="margin-top: 16px;">
+            <div class="callout">
+              <div class="tiny">Updated</div>
+              <div id="updated-at">Never</div>
+            </div>
+            <div class="callout">
+              <div class="tiny">Model</div>
+              <div id="model-readout">gemini-2.0-flash</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section class="panel" style="margin-top: 20px;">
+        <div class="participant-header">
+          <div>
+            <h2 style="margin-bottom: 4px;">Participants</h2>
+            <div class="tiny">Use one participant card per Discord stream window.</div>
+          </div>
+          <div class="button-row">
+            <button id="add-participant" class="secondary">Add Participant</button>
+            <button id="save-participants">Save Participants</button>
+          </div>
+        </div>
+        <div id="participant-list" class="participant-list" style="margin-top: 18px;"></div>
+      </section>
+    </main>
+
+    <script type="module" src="/control.js"></script>
+  </body>
+</html>
+
+
