@@ -27,10 +27,11 @@ const els = {
   participantList: document.getElementById("participant-list"),
 };
 
-function createParticipantDraft(participant = {}) {
+function createParticipantDraft(participant = {}, index = 0) {
   return {
     id: participant.id || `p_${crypto.randomUUID().slice(0, 8)}`,
     name: participant.name || "New Participant",
+    color: participant.color || fallbackColor(index),
     sourceLabel: participant.sourceLabel || "",
     hasFrame: Boolean(participant.hasFrame),
     lastFrameAt: participant.lastFrameAt || null,
@@ -40,16 +41,21 @@ function createParticipantDraft(participant = {}) {
 function getParticipantDraftMap() {
   return new Map(
     Array.from(els.participantList.querySelectorAll("[data-participant-id]"))
-      .map((card) => [card.dataset.participantId, card.querySelector(".participant-name")?.value.trim()])
-      .filter((entry) => entry[1]),
+      .map((card, index) => {
+        const name = card.querySelector(".participant-name")?.value.trim();
+        const color = card.querySelector(".participant-color")?.value || fallbackColor(index);
+        return [card.dataset.participantId, { name, color }];
+      })
+      .filter((entry) => entry[1].name || entry[1].color),
   );
 }
 
 function getDraftParticipants() {
   return Array.from(els.participantList.querySelectorAll("[data-participant-id]"))
-    .map((card) => ({
+    .map((card, index) => ({
       id: card.dataset.participantId,
       name: card.querySelector(".participant-name").value.trim() || "Participant",
+      color: card.querySelector(".participant-color")?.value || fallbackColor(index),
     }));
 }
 
@@ -135,17 +141,22 @@ function renderParticipants(forceRebuild = false) {
 }
 
 function rebuildParticipantCards(participants) {
-  const draftNames = getParticipantDraftMap();
+  const draftById = getParticipantDraftMap();
   els.participantList.innerHTML = "";
 
-  for (const participant of participants) {
-    const displayName = draftNames.get(participant.id) || participant.name;
+  for (const [index, participant] of participants.entries()) {
+    const draft = draftById.get(participant.id) || {};
+    const displayName = draft.name || participant.name;
+    const displayColor = draft.color || participant.color || fallbackColor(index);
     const card = document.createElement("article");
     card.className = "participant-card";
     card.dataset.participantId = participant.id;
     card.innerHTML = `
       <div class="participant-header">
-        <input class="participant-name" value="${escapeHtml(displayName)}" aria-label="Participant name">
+        <div class="participant-header-main">
+          <input class="participant-name" value="${escapeHtml(displayName)}" aria-label="Participant name">
+          <input class="participant-color" type="color" value="${escapeHtml(displayColor)}" aria-label="Participant color">
+        </div>
         <div class="button-row">
           <button type="button" class="secondary connect-source">Connect Source</button>
           <button type="button" class="secondary disconnect-source">Disconnect</button>
@@ -184,6 +195,7 @@ function syncParticipantCards(participants) {
       : "No score yet";
     const summaryText = analysisEntry?.summary || "Connect a capture source to start sending screenshots.";
 
+    card.querySelector(".participant-name").value = participant.name;
     card.querySelector(".source-label").textContent = sourceLabel;
     card.querySelector(".last-frame").textContent = participant.lastFrameAt
       ? new Date(participant.lastFrameAt).toLocaleTimeString()
@@ -244,13 +256,14 @@ async function toggleScoring() {
 }
 
 function addParticipant() {
-  const participant = createParticipantDraft();
+  const participant = createParticipantDraft({}, state.session.participants.length);
   state.session.participants.push(participant);
   if (!state.session.latestAnalysis.participants.find((item) => item.id === participant.id)) {
     state.session.latestAnalysis.participants.push({
       id: participant.id,
       progress: 0,
       share: 0,
+      color: participant.color,
       summary: "Waiting for screenshots.",
       evidence: "",
       confidence: 0,
@@ -423,10 +436,20 @@ els.toggleScoring.addEventListener("click", () => toggleScoring().catch(showErro
 els.addParticipant.addEventListener("click", addParticipant);
 els.sessionId.addEventListener("change", () => loadSession().catch(showError));
 
+function fallbackColor(index) {
+  const colors = ["#ff8c42", "#4f8cff", "#52d273", "#f55b7a", "#ffd166", "#8bd3ff"];
+  return colors[index % colors.length];
+}
+
 function showError(error) {
   els.headline.textContent = "Action failed";
   els.rationale.textContent = error.message;
 }
 
 loadSession().catch(showError);
+
+
+
+
+
 

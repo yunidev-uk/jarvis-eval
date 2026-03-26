@@ -325,6 +325,9 @@ async function scoreSession(session) {
           generationConfig: {
             temperature: 0.2,
             responseMimeType: "application/json",
+            thinkingConfig: {
+              thinkingLevel: "low"
+            },
           },
         }),
       },
@@ -413,7 +416,7 @@ const server = http.createServer(async (request, response) => {
             return {
               id: participant.id || current?.id || randomId(`p${index + 1}`),
               name: String(participant.name || current?.name || `Participant ${index + 1}`),
-              color: current?.color || participantColor(index),
+              color: participant.color || current?.color || participantColor(index),
               lastFrameAt: current?.lastFrameAt || null,
               lastFrameDataUrl: current?.lastFrameDataUrl || null,
               sourceLabel: current?.sourceLabel || null,
@@ -551,6 +554,7 @@ server.listen(PORT, HOST, () => {
   getSession("default");
   console.log(`Jarvis live reviewer listening on http://${HOST}:${PORT}`);
 });
+
 
 
 

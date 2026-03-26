@@ -194,6 +194,27 @@ button:disabled {
   align-items: center;
 }
 
+.participant-header-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.participant-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.participant-color {
+  width: 54px;
+  height: 44px;
+  padding: 4px;
+  flex: none;
+  cursor: pointer;
+}
+
 .participant-meta {
   margin: 8px 0 12px;
   color: var(--muted);
@@ -436,8 +457,11 @@ body.overlay-page .obs-overlay * {
 }
 
 .eval-fill {
+  position: relative;
+  z-index: 1;
   height: 100%;
-  transition: width 320ms ease;
+  transition: width 520ms cubic-bezier(0.22, 1, 0.36, 1), background-color 180ms ease;
+  will-change: width;
 }
 
 .eval-fill-left {
@@ -452,12 +476,14 @@ body.overlay-page .obs-overlay * {
 
 .eval-neutral-line {
   position: absolute;
+  z-index: 2;
   top: -2px;
   bottom: -2px;
   left: 50%;
   width: 2px;
   margin-left: -1px;
-  background: rgba(255, 140, 66, 0.95);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 0 0 1px rgba(255, 140, 66, 0.9);
 }
 
 .overlay-footer {
@@ -503,16 +529,12 @@ body.overlay-page[data-show-footer="0"] #overlay-footer {
   }
 }
 .eval-bar.is-done {
-  background: var(--done-color, rgba(255, 255, 255, 0.92));
-}
-
-.eval-bar.is-done .eval-fill,
-.eval-bar.is-done .eval-neutral-line {
-  display: none;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12) inset, 0 0 30px color-mix(in srgb, var(--done-color, #fff) 30%, transparent);
 }
 
 .eval-done-label {
   position: absolute;
+  z-index: 3;
   inset: 0;
   display: flex;
   align-items: center;
@@ -527,3 +549,6 @@ body.overlay-page[data-show-footer="0"] #overlay-footer {
   opacity: 1;
   transition: opacity 160ms ease;
 }
+
+
+
