@@ -8,12 +8,21 @@ import {
   buildEvenScoreState,
   createInitialParticipants,
   mergeScores,
+  participantColor,
 } from "./scoring.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 const publicDir = path.join(rootDir, "public");
+
+try {
+  process.loadEnvFile(path.join(rootDir, ".env"));
+} catch (error) {
+  if (error?.code !== "ENOENT") {
+    console.warn(`Failed to load .env: ${error.message}`);
+  }
+}
 
 const HOST = process.env.HOST || "127.0.0.1";
 const PORT = Number(process.env.PORT || 8787);
@@ -117,6 +126,7 @@ function publicSessionState(session) {
     participants: session.participants.map((participant) => ({
       id: participant.id,
       name: participant.name,
+      color: participant.color,
       sourceLabel: participant.sourceLabel,
       hasFrame: Boolean(participant.lastFrameDataUrl),
       lastFrameAt: participant.lastFrameAt,
@@ -202,6 +212,7 @@ function buildGeminiPrompt(session) {
     "Do not punish temporary syntax errors too hard when someone is clearly still typing.",
     "If everyone is roughly blank or only has boilerplate, keep the scores even.",
     "If a correct solution is reached, the progress should be 100%.",
+    "Only award 100% progress if the solution has been demonstrated by running in a terminal with a correct example - if a running example is not shown, it is not considered solved",
     "Return strict JSON only.",
   ].join("\n");
 
@@ -230,7 +241,7 @@ function buildGeminiPrompt(session) {
     "Participants:",
     participantList,
     "",
-    "Previous smoothed scores:",
+    "Previous scores:",
     JSON.stringify(previousScores, null, 2),
     "",
     "Output schema:",
@@ -325,11 +336,9 @@ async function scoreSession(session) {
 
     const result = await response.json();
     const parsed = extractJson(extractTextFromGeminiResponse(result));
-    const previousProgress = session.latestAnalysis.participants.map((participant) => participant.progress ?? 0);
     const mergedParticipants = mergeScores(
       session.participants,
       parsed.participants,
-      previousProgress,
     );
 
     session.latestAnalysis = {
@@ -404,6 +413,7 @@ const server = http.createServer(async (request, response) => {
             return {
               id: participant.id || current?.id || randomId(`p${index + 1}`),
               name: String(participant.name || current?.name || `Participant ${index + 1}`),
+              color: current?.color || participantColor(index),
               lastFrameAt: current?.lastFrameAt || null,
               lastFrameDataUrl: current?.lastFrameDataUrl || null,
               sourceLabel: current?.sourceLabel || null,
@@ -541,7 +551,6 @@ server.listen(PORT, HOST, () => {
   getSession("default");
   console.log(`Jarvis live reviewer listening on http://${HOST}:${PORT}`);
 });
-
 
 
 

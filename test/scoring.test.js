@@ -5,18 +5,13 @@ import {
   createInitialParticipants,
   mergeScores,
   normalizeShares,
-  smoothScores,
 } from "../src/scoring.js";
 
 test("normalizeShares returns equal bars for zero progress", () => {
   assert.deepEqual(normalizeShares([0, 0]), [50, 50]);
 });
 
-test("smoothScores blends previous and next values", () => {
-  assert.deepEqual(smoothScores([40, 60], [100, 0], 0.5), [70, 30]);
-});
-
-test("mergeScores preserves participant order and computes shares", () => {
+test("mergeScores uses direct scores without smoothing", () => {
   const participants = createInitialParticipants(2);
   const merged = mergeScores(participants, [
     { id: participants[1].id, progress: 80, summary: "Ahead" },
@@ -25,6 +20,8 @@ test("mergeScores preserves participant order and computes shares", () => {
 
   assert.equal(merged[0].id, participants[0].id);
   assert.equal(merged[1].id, participants[1].id);
+  assert.equal(merged[0].progress, 20);
+  assert.equal(merged[1].progress, 80);
   assert.ok(merged[1].share > merged[0].share);
 });
 

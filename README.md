@@ -28,7 +28,7 @@ npm install
 npm start
 ```
 
-Optional environment variables:
+Optional environment variables in a project-root `.env` file or your shell:
 
 ```bash
 PORT=8787
@@ -72,5 +72,6 @@ The server asks Gemini for an absolute progress estimate from `0-100`, then smoo
 - Modern browsers require a user gesture for each screen/window capture prompt.
 - This project assumes the operator runs the control page locally in a Chromium-based browser.
 - If you want stricter access control for the control API, set `CONTROL_TOKEN` and send it in `x-control-token` from your own tooling or a reverse proxy.
+
 
 

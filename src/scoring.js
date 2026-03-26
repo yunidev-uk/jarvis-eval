@@ -1,5 +1,17 @@
 const SCORE_FLOOR = 10;
-const DEFAULT_SMOOTHING = 0.35;
+
+export const PARTICIPANT_COLORS = [
+  "#ff8c42",
+  "#4f8cff",
+  "#52d273",
+  "#f55b7a",
+  "#ffd166",
+  "#8bd3ff",
+];
+
+export function participantColor(index) {
+  return PARTICIPANT_COLORS[index % PARTICIPANT_COLORS.length];
+}
 
 export function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -17,18 +29,6 @@ export function equalShare(count) {
   const even = 100 / count;
   const shares = Array.from({ length: count }, () => round1(even));
   return rebalancePercentages(shares);
-}
-
-export function smoothScores(previous, next, factor = DEFAULT_SMOOTHING) {
-  if (!Array.isArray(previous) || previous.length !== next.length) {
-    return next.map((value) => round1(clamp(value, 0, 100)));
-  }
-
-  return next.map((value, index) => {
-    const prior = Number.isFinite(previous[index]) ? previous[index] : value;
-    const blended = prior * (1 - factor) + value * factor;
-    return round1(clamp(blended, 0, 100));
-  });
 }
 
 export function normalizeShares(progressScores) {
@@ -93,6 +93,7 @@ export function buildEvenScoreState(participants, reason = "Waiting for useful c
       id: participant.id,
       progress: 0,
       share: share[index] ?? 0,
+      color: participant.color ?? participantColor(index),
       summary: reason,
       evidence: "",
       confidence: 0,
@@ -100,17 +101,14 @@ export function buildEvenScoreState(participants, reason = "Waiting for useful c
   };
 }
 
-export function mergeScores(participants, rawScores, previousProgress = []) {
+export function mergeScores(participants, rawScores) {
   const sanitized = sanitizeModelScores(participants, rawScores);
-  const smoothedProgress = smoothScores(
-    previousProgress,
-    sanitized.map((item) => item.progress),
-  );
-  const shares = normalizeShares(smoothedProgress);
+  const progress = sanitized.map((item) => item.progress);
+  const shares = normalizeShares(progress);
 
   return sanitized.map((item, index) => ({
     ...item,
-    progress: smoothedProgress[index] ?? item.progress,
+    progress: progress[index] ?? item.progress,
     share: shares[index] ?? 0,
   }));
 }
@@ -140,6 +138,7 @@ export function createInitialParticipants(count = 2) {
   return Array.from({ length: count }, (_, index) => ({
     id: `p${index + 1}`,
     name: `Participant ${index + 1}`,
+    color: participantColor(index),
     lastFrameAt: null,
     lastFrameDataUrl: null,
     sourceLabel: null,

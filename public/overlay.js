@@ -54,15 +54,15 @@ const els = {
   rightMetric: document.getElementById("right-metric"),
   leftFill: document.getElementById("eval-left"),
   rightFill: document.getElementById("eval-right"),
+  bar: document.getElementById("eval-bar"),
+  doneLabel: document.getElementById("eval-done-label"),
 };
 
 applyUiState();
 
 function connect() {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const url =
-    `${protocol}//${window.location.host}` +
-    `/ws?session=${encodeURIComponent(sessionId)}`;
+  const url = `${protocol}//${window.location.host}/ws?session=${encodeURIComponent(sessionId)}`;
   const socket = new WebSocket(url);
 
   socket.addEventListener("message", (event) => {
@@ -96,6 +96,7 @@ function render(session) {
     right.share,
     (session.participants || []).length,
   );
+  const doneSide = getDoneSide(sides);
 
   els.statusDot.classList.toggle("on", Boolean(session.enabled));
   els.statusText.textContent = session.enabled ? "Live" : "Paused";
@@ -103,9 +104,9 @@ function render(session) {
   els.leftName.textContent = left.name;
   els.rightName.textContent = right.name;
 
-  els.headline.textContent =
-    analysis.headline ||
-    defaultHeadline(leftPct, rightPct, left.name, right.name);
+  els.headline.textContent = doneSide
+    ? `${doneSide.name} is done`
+    : analysis.headline || defaultHeadline(leftPct, rightPct, left.name, right.name);
 
   els.updated.textContent = analysis.updatedAt
     ? `Updated ${formatTime(analysis.updatedAt)}`
@@ -113,22 +114,47 @@ function render(session) {
 
   els.rationale.textContent = analysis.rationale || "";
 
-  els.leftMetric.textContent =
-    `${leftPct.toFixed(1)}% • ${formatNumber(left.progress)} progress`;
-  els.rightMetric.textContent =
-    `${rightPct.toFixed(1)}% • ${formatNumber(right.progress)} progress`;
+  els.leftMetric.textContent = `${leftPct.toFixed(1)}% • ${formatNumber(left.progress)} progress`;
+  els.rightMetric.textContent = `${rightPct.toFixed(1)}% • ${formatNumber(right.progress)} progress`;
 
+  renderBar(left, right, leftPct, rightPct, doneSide);
+}
+
+function renderBar(left, right, leftPct, rightPct, doneSide) {
+  els.leftFill.style.background = left.color;
+  els.rightFill.style.background = right.color;
+
+  if (doneSide) {
+    els.bar.classList.add("is-done");
+    els.bar.style.setProperty("--done-color", doneSide.color);
+    els.bar.style.setProperty("--done-text-color", getReadableTextColor(doneSide.color));
+    els.doneLabel.hidden = false;
+    els.doneLabel.textContent = `${doneSide.name} is done`;
+
+    if (doneSide.id === left.id) {
+      els.leftFill.style.width = "100%";
+      els.rightFill.style.width = "0%";
+    } else {
+      els.leftFill.style.width = "0%";
+      els.rightFill.style.width = "100%";
+    }
+    return;
+  }
+
+  els.bar.classList.remove("is-done");
+  els.bar.style.removeProperty("--done-color");
+  els.bar.style.removeProperty("--done-text-color");
+  els.doneLabel.hidden = true;
+  els.doneLabel.textContent = "";
   els.leftFill.style.width = `${leftPct}%`;
   els.rightFill.style.width = `${rightPct}%`;
 }
 
 function getSides(session, analysis) {
-  const scoreById = new Map(
-    (analysis.participants || []).map((item) => [item.id, item]),
-  );
+  const scoreById = new Map((analysis.participants || []).map((item) => [item.id, item]));
 
   const sessionParticipants = (session.participants || []).slice(0, 2);
-  const sides = sessionParticipants.map((participant) => {
+  const sides = sessionParticipants.map((participant, index) => {
     const score = scoreById.get(participant.id) || {};
 
     return {
@@ -136,15 +162,18 @@ function getSides(session, analysis) {
       name: participant.name || "Unknown",
       share: toNumber(score.share),
       progress: toNumber(score.progress),
+      color: participant.color || fallbackColor(index),
     };
   });
 
   while (sides.length < 2) {
+    const index = sides.length;
     sides.push({
-      id: `placeholder-${sides.length}`,
-      name: sides.length === 0 ? "Left" : "Right",
+      id: `placeholder-${index}`,
+      name: index === 0 ? "Left" : "Right",
       share: 0,
       progress: 0,
+      color: fallbackColor(index),
     });
   }
 
@@ -153,6 +182,14 @@ function getSides(session, analysis) {
   }
 
   return sides;
+}
+
+function getDoneSide(sides) {
+  return (
+    sides
+      .filter((side) => side.progress >= 100)
+      .sort((left, right) => right.progress - left.progress)[0] || null
+  );
 }
 
 function normalizeShares(leftShare, rightShare, participantCount) {
@@ -229,6 +266,29 @@ function formatTime(value) {
     minute: "2-digit",
     second: "2-digit",
   });
+}
+
+function fallbackColor(index) {
+  return index === 0 ? "#ff8c42" : "#4f8cff";
+}
+
+function getReadableTextColor(hex) {
+  const { r, g, b } = hexToRgb(hex);
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return luminance > 0.6 ? "#071018" : "#f8fbff";
+}
+
+function hexToRgb(hex) {
+  const normalized = String(hex || "").trim().replace(/^#/, "");
+  const value = normalized.length === 3
+    ? normalized.split("").map((char) => char + char).join("")
+    : normalized.padEnd(6, "0").slice(0, 6);
+  const int = Number.parseInt(value, 16);
+  return {
+    r: (int >> 16) & 255,
+    g: (int >> 8) & 255,
+    b: int & 255,
+  };
 }
 
 connect();

@@ -474,6 +474,7 @@ body.overlay-page[data-show-title="0"] #overlay-title,
 body.overlay-page[data-show-labels="0"] .eval-top,
 body.overlay-page[data-show-details="0"] #eval-details,
 body.overlay-page[data-show-rationale="0"] #overlay-rationale,
+body.overlay-page[data-show-rationale="0"] #overlay-headline,
 body.overlay-page[data-show-status="0"] #overlay-status,
 body.overlay-page[data-show-updated="0"] #overlay-updated,
 body.overlay-page[data-show-footer="0"] #overlay-footer {
@@ -500,4 +501,29 @@ body.overlay-page[data-show-footer="0"] #overlay-footer {
   .overlay-footer {
     font-size: 0.85rem;
   }
+}
+.eval-bar.is-done {
+  background: var(--done-color, rgba(255, 255, 255, 0.92));
+}
+
+.eval-bar.is-done .eval-fill,
+.eval-bar.is-done .eval-neutral-line {
+  display: none;
+}
+
+.eval-done-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  font-weight: 800;
+  color: var(--done-text-color, #071018);
+  letter-spacing: 0.02em;
+  text-shadow: none;
+  opacity: 1;
+  transition: opacity 160ms ease;
 }
